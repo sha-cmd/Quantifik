@@ -45,6 +45,7 @@ def pourcent_outside_3iqr(data: pd.Series) -> float:
                 pct_outside_confidence_interval = 0
             return pct_outside_confidence_interval
 
+
 def iqr(data: pd.Series) -> float:
     """
     Renvoie le pourcentage de valeurs au-dehors de l'intervalle de confiance externe.
@@ -65,7 +66,7 @@ def amount_type(X):
     for col in X.columns:
         if str(X[col].dtype) in 'float64':
             nb_flt.append(col)
-        if (str(X[col].dtype) in 'object') | (str(X[col].dtype) in 'uint8') :
+        if (str(X[col].dtype) in 'object') | (str(X[col].dtype) in 'uint8'):
             nb_str.append(col)
         if str(X[col].dtype) in 'int64':
             nb_int.append(col)
@@ -98,17 +99,17 @@ def prepare_outliers_box_plot(df_att):
     return data
 
 
-def boxplot(Xy,  word, type_val):
-    #Xy = pd.read_csv('../notebooks/Xy.csv', index_col='index')
+def boxplot(Xy, word, type_val):
+    # Xy = pd.read_csv('../notebooks/Xy.csv', index_col='index')
     X_str = Xy.drop('TARGET', axis=1).copy()
     y_str = Xy['TARGET'].map({1: '1', 0: '0'}).copy()
     y_int = Xy['TARGET']
     nb_flt, nb_int, nb_str, df_col_type = amount_type(X_str)
-    #onehotencoder = pd.get_dummies(X_str[nb_str])
-    #X_onehotenc = X_str.join(onehotencoder).drop(nb_str, axis=1).copy()
+    # onehotencoder = pd.get_dummies(X_str[nb_str])
+    # X_onehotenc = X_str.join(onehotencoder).drop(nb_str, axis=1).copy()
     df_type = df_col_type[df_col_type[type_val].notnull()][type_val]
     df_type_word = df_type.loc[df_type.str.contains(word)]
-    data_type_word = Xy[list(df_type_word.values)]#X_onehotenc[list(df_type_word.values)]#.iloc[:, :4]
+    data_type_word = Xy[list(df_type_word.values)]  # X_onehotenc[list(df_type_word.values)]#.iloc[:, :4]
     H = Highchart(width=550, height=400)
 
     options = {
@@ -162,7 +163,6 @@ def generate_val_for_pie3D(y):
 
 
 def piechart3D_cible(list_values, text, subtitle):
-
     H = Highchart(width=550, height=400)
 
     options = {
@@ -265,6 +265,7 @@ def null_number_plot(X, eda_df, col_type, title, subtitle):
 
     return H
 
+
 def column_plot(eda, col, title, subtitle, yaxis):
     list_of = []
     for it, row in eda[['columns', col]].iterrows():
@@ -273,7 +274,6 @@ def column_plot(eda, col, title, subtitle, yaxis):
         dict_df.update({'y': float(row[col])})
         dict_df.update({'drilldown': row['columns']})
         list_of.append(dict_df)
-
 
     """
     Highcharts Demos
@@ -335,6 +335,7 @@ def column_plot(eda, col, title, subtitle, yaxis):
 
     return H
 
+
 def table(data):
     """
     Renvoie un tableau pour présenter les seuils choisis (Lim), le maximum et le minimum de la colonne, et le nombre
@@ -342,16 +343,16 @@ def table(data):
     :param data: pandas DataFrame
     :return: void
     """
-    #rec: dict = SEUILS_DE_VALEURS
+
     dataframe = pd.DataFrame({'columns': pd.Series([], dtype=str),
-                                'type': pd.Series([], dtype=str),
+                              'type': pd.Series([], dtype=str),
                               'unique': pd.Series([], dtype=int),
                               'mean': pd.Series([], dtype=float),
                               'std': pd.Series([], dtype=float),
                               'pct_null': pd.Series([], dtype=float),
                               'pct>3iqr': pd.Series([], dtype=float),
                               'non-nulls': pd.Series([], dtype=int),
-                              #'limits': pd.Series([], dtype=float),
+                              # 'limits': pd.Series([], dtype=float),
                               'max': pd.Series([], dtype=float),
                               'min': pd.Series([], dtype=float),
                               'outliers': pd.Series([], dtype=int),
@@ -361,73 +362,69 @@ def table(data):
                               'mode': pd.Series([], dtype=float),
                               'median': pd.Series([], dtype=float)
                               })
-     # dtypes information
+    # dtypes information
     dtypes_uniques = set()  # Collection of unique elements
     dtypes_listes = []  # list of complete data columns
     memory_usage = 0  # in MB
     nb_values_to_modify: int = 0
     nb_values_not_null: int = 0
     nb_values_is_null: int = 0
+    list_de_cols = enumerate(data.columns) if isinstance(data, pd.DataFrame) else [data.name]
+    is_a_str_series = isinstance(data, pd.Series)
+    for col in list_de_cols:  # Feed the set and the list
 
-    for it, col in enumerate(data.columns):  # Feed the set and the list
-        is_a_str_series = True in map((lambda val: type(val) == str), data[col])
-        max_col = str(data[col].max()) if not is_a_str_series else 'None'
-        min_col = str(data[col].min()) if not is_a_str_series else 'None'
-        #try:
-        #    out_col = data[col][data[col] > rec[col]].count()
-        #except KeyError as error:
-        #    out_col = 0
-        #Sprint(col)
-        neg_col = data[col][data[col] < 0].count()
-        #nb_values_to_modify += out_col + neg_col
-        nb_values_not_null += data[col].count()
-        # print(str(data[col].max()))
-        dtypes_listes.append(str(data[col].dtype))
-        if str(data[col].dtype) not in dtypes_uniques:
-            dtypes_uniques.add(str(data[col].dtype))
-        is_a_str_series = True in map((lambda x: type(x) == str), data[col])
-        max_col = str(data[col].max()) if not is_a_str_series else 'None'
-        # print(str(data[col].max()))
-        out_col = data[col][data[col] > 3 * iqr(data[col])].count()
-        neg_col = data[col][data[col] < 0].count()
+        min_col = str(data[col].min()) if not is_a_str_series else str(data.min())
+
+        nb_values_not_null += data[col].count() if not is_a_str_series else data.count()
+
+        dtype = data[col].dtypes if not is_a_str_series else data.dtype
+        dtypes_listes.append(str(dtype))
+
+        if str(dtype) not in dtypes_uniques:
+            dtypes_uniques.add(dtype)
+        max_col = str(data[col].max()) if not is_a_str_series else str(data.max())
+        out_col = data[col][data[col] > 3 * iqr(data[col])].count() if not is_a_str_series else data[
+            data > 3 * iqr(data)].count()
+        neg_col = data[col][data[col] < 0].count() if not is_a_str_series else data[data < 0].count()
         nb_values_to_modify += out_col + neg_col
-        #nb_values_not_null += data[col].count()
         try:
-            nb_values_is_null += data[col].isnull().value_counts()[True]
+            nb_values_is_null += data[col].isnull().value_counts()[True] if not is_a_str_series else \
+            data.isnull().value_counts()[True]
         except KeyError as error:
             nb_values_is_null += 0
-        dtypes_listes.append(str(data[col].dtype))
-        if str(data[col].dtype) not in dtypes_uniques:
-            dtypes_uniques.add(str(data[col].dtype))
 
-        dataframe = dataframe.append({'columns': col, 'type': data[col].dtype, 
-                                        'unique': len(data[col].unique()),
-                                        'mean': data[col].mean(),
-                                         'std': data[col].std(),
-                                      'pct_null': pourcent_of_null(data[col]),
-                                      'pct>3iqr': pourcent_outside_3iqr(data[col]),
-                                        'non-nulls': data[col].count(), 
-                                     #   'limits': rec.get(col),
+        dataframe = dataframe.append({'columns': col, 'type': data[col].dtype if not is_a_str_series else data.dtype,
+                                      'unique': len(data[col].unique()) if not is_a_str_series else len(data.unique()),
+                                      'mean': data[col].mean() if not is_a_str_series else data.mean(),
+                                      'std': data[col].std() if not is_a_str_series else data.std(),
+                                      'pct_null': pourcent_of_null(
+                                          data[col]) if not is_a_str_series else pourcent_of_null(data),
+                                      'pct>3iqr': pourcent_outside_3iqr(
+                                          data[col]) if not is_a_str_series else pourcent_outside_3iqr(data),
+                                      'non-nulls': data[col].count() if not is_a_str_series else data.count(),
+                                      #   'limits': rec.get(col),
                                       'max': max_col, 'min': min_col, 'outliers': out_col,
                                       'negatives': neg_col,
-                                      'kurtosis': data[col].kurt(),
-                                      'skewness': data[col].skew(),
-                                      'mode': data[col].mode()[0],
-                                      'median': data[col].median()}, ignore_index=True)
+                                      'kurtosis': data[col].kurt() if not is_a_str_series else data.kurt(),
+                                      'skewness': data[col].skew() if not is_a_str_series else data.skew(),
+                                      'mode': data[col].mode()[0] if not is_a_str_series else data.mode(),
+                                      'median': data[col].median() if not is_a_str_series else data.median()},
+                                     ignore_index=True)
         # Collect informatives on disk usage by observation onto the data column
-        memory_usage += int(data[col].memory_usage(index=True, deep=True))
+        memory_usage += int(data[col].memory_usage(index=True, deep=True)) if not is_a_str_series else int(
+            data.memory_usage(index=True, deep=True))
     # Blend of set and list to print the information line as usual
     dtypes_string = ''
     for x in dtypes_uniques:
         dtypes_string += '{}({}), '.format(x, dtypes_listes.count(x))
     print('\ndtypes: {}'.format(dtypes_string))
-   # Digit format to write mem usage in comprehensive format
+    # Digit format to write mem usage in comprehensive format
     print('\nmemory usage: {:.4} MB\n'.format(memory_usage / (1024 * 1024)))
-    print('\nNombre de lignes: {}\n'.format(len(data[data.columns[0]])))
+    print('\nNombre de lignes: {}\n'.format(data.shape[0]) if not is_a_str_series else len(data))
     print('\nNombre de valeurs non-nulles: {}\n'.format(nb_values_not_null))
     print('\nNombre de valeurs nulles: {}\n'.format(nb_values_is_null))
- #   print('\nNombre de valeurs aberrantes et atypiques: {}\n'.format(nb_values_to_modify))
-#    print('\nNombre de valeurs au-dessus du seuil: {}\n'.format(nb_values_to_modify))
+    #   print('\nNombre de valeurs aberrantes et atypiques: {}\n'.format(nb_values_to_modify))
+    #    print('\nNombre de valeurs au-dessus du seuil: {}\n'.format(nb_values_to_modify))
     return dataframe
 
 
@@ -472,4 +469,3 @@ def plot_feature_importances(df):
     plt.show()
 
     return df
-
