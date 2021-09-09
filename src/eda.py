@@ -371,7 +371,7 @@ def table(data):
     nb_values_is_null: int = 0
     list_de_cols = enumerate(data.columns) if isinstance(data, pd.DataFrame) else [data.name]
     is_a_str_series = isinstance(data, pd.Series)
-    for col in list_de_cols:  # Feed the set and the list
+    for it, col in list_de_cols:  # Feed the set and the list
 
         min_col = str(data[col].min()) if not is_a_str_series else str(data.min())
 
