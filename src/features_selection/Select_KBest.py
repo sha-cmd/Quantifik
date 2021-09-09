@@ -18,5 +18,5 @@ class Select_KBest:
         selector.fit(X_plus, y)
         X_new = selector.transform(X)
         X_new.shape
-        return [list(X.columns)[it] for it, x in enumerate(selector.get_support().tolist()) if x]
+        self.columns =  [list(X.columns)[it] for it, x in enumerate(selector.get_support().tolist()) if x]
         
