@@ -5,7 +5,7 @@ from sklearn.feature_selection import SelectKBest, chi2
 
 
 def get_default_params():
-    return pd.DataFrame.from_dict({'k': 5})
+    return pd.DataFrame.from_dict({'k': 5}, orient='index').T
 
 
 class Select_KBest:
@@ -14,7 +14,7 @@ class Select_KBest:
         scaler = MinMaxScaler()
         scaler.fit(X)
         X_plus = scaler.transform(X)
-        selector = SelectKBest(chi2, k=params['k'])
+        selector = SelectKBest(chi2, k=params['k'][0])
         selector.fit(X_plus, y)
         X_new = selector.transform(X)
         X_new.shape
