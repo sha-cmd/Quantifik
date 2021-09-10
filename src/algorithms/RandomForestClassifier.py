@@ -15,7 +15,6 @@ from sklearn.metrics import (precision_recall_curve,
 from sklearn.metrics import (precision_score, recall_score,
                              f1_score)
 from sklearn.inspection import permutation_importance
-from src.algorithms.Algorithm import Algorithm
 
 log = log()
 
@@ -71,7 +70,7 @@ def debugg(x, letter):
     print(letter, x)
 
 
-class RandomForestClassifierAlgorithm(Algorithm):
+class RandomForestClassifierAlgorithm():
 
     def __init__(self, X, y, params: pd.DataFrame = default_params()):
         self.clf: RFC = RFC()
@@ -154,10 +153,15 @@ class RandomForestClassifierAlgorithm(Algorithm):
         }, orient='index').T
         result_df.to_csv(dossier + '/' + 'performances.csv', index_label='index')
         self.feature_importances(X_test, y_test, dossier, name, fmt)
+        plt.close()
         self.permutation_importances(X_test, y_test, 'Test set', dossier, name, fmt)
+        plt.close()
         self.calibration_curve(X_test, y_test, dossier, name, fmt)
+        plt.close()
         self.learning_curve(X_test, y_test, dossier, name, fmt)
+        plt.close()
         self.ks_stat(X_test, y_test, dossier, name, fmt)
+        plt.close()
 
     def feature_importances(self, X, y, dossier, name, fmt):
         feature_names = [f'{i}' for i in list(X.columns)]
