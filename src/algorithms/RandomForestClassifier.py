@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
+import time
 import ast
+import scikitplot as skplt
+
 
 from sklearn.ensemble import RandomForestClassifier as RFC
 from sklearn.metrics import plot_confusion_matrix
@@ -11,6 +13,7 @@ from sklearn.metrics import (precision_recall_curve,
                              PrecisionRecallDisplay)
 from sklearn.metrics import (precision_score, recall_score,
                              f1_score)
+from sklearn.inspection import permutation_importance
 from src.algorithms.Algorithm import Algorithm
 
 
@@ -60,6 +63,11 @@ def default_params():
                      )
 
 
+def debugg(x, letter):
+    print(type(x))
+    print(letter, x)
+
+
 class RandomForestClassifierAlgorithm(Algorithm):
 
     def __init__(self, X, y, params: pd.DataFrame = default_params()):
@@ -69,7 +77,7 @@ class RandomForestClassifierAlgorithm(Algorithm):
         self.max_depth = params['max_depth']if not pd.isna(params['max_depth']) else 2
         self.min_samples_split = float(params['min_samples_split']) if (
                     params['min_samples_split'] <= 1) else \
-            (int(params['min_samples_leaf'])) if (params['min_samples_leaf'] > 1) else (int(2))
+            (int(params['min_samples_split'])) if (params['min_samples_split'] > 1) else (int(2))
         self.min_samples_leaf = float(params['min_samples_leaf']) if (
                     params['min_samples_leaf'] < 1) else \
             (int(params['min_samples_leaf'])) if (params['min_samples_leaf'] >= 1) else int(1)
@@ -89,9 +97,13 @@ class RandomForestClassifierAlgorithm(Algorithm):
         self.class_weight = ast.literal_eval(params['class_weight']) if not (
                     pd.isna(params['class_weight'])) else "balanced"
         self.ccp_alpha = params['ccp_alpha'] if not pd.isna(params['ccp_alpha']) else 0.0
-        self.max_samples = params['max_samples'] if not pd.isna(params['max_samples']) else X.shape[0]
+        self.max_samples = params['max_samples'] if not pd.isna(params['max_samples']) else None
         self.make_classifier()
-        self.clf.fit(X, y)
+        debugg(self.max_samples, 'max samples')
+
+
+    def fit_clf(self, X, y):
+        self.clf.fit(X, y.values.ravel())
 
     def gen_df_params(self):
         default_params().to_csv('RandomForestClassifier_params.csv', index_label='index')
@@ -118,28 +130,91 @@ class RandomForestClassifierAlgorithm(Algorithm):
                        max_samples=self.max_samples
                        )
 
-    def metrics(self, X_test, y_test, dossier, name, format):
+    def metrics(self, X_test, y_test, dossier, name, fmt):
         y_pred = self.clf.predict(X_test)
         plot_roc_curve(self.clf, X_test, y_test)
-        plt.savefig(dossier + '/' + 'roc_curve_' + name + '.' + format)
+        plt.savefig(dossier + '/' + 'roc_curve_' + name + '.' + fmt)
         plt.close()
         plot_confusion_matrix(self.clf, X_test, y_test)
-        plt.savefig(dossier + '/' + 'conf_matrix_' + name + '.' + format)
+        plt.savefig(dossier + '/' + 'conf_matrix_' + name + '.' + fmt)
         plt.close()
         predictions = self.clf.predict(X_test)
         precision, recall, _ = precision_recall_curve(y_test, predictions)
-        disp = PrecisionRecallDisplay(precision=precision, recall=recall)
-        disp.plot()
-        plt.savefig(dossier + '/' + 'precrecalldisp_' + name + '.' + format)
+        display = PrecisionRecallDisplay(precision=precision, recall=recall)
+        display.plot()
+        plt.savefig(dossier + '/' + 'precrecalldisp_' + name + '.' + fmt)
         result_df = pd.DataFrame.from_dict({
             'Precision': precision_score(y_test, y_pred),
             'Recall': recall_score(y_test, y_pred),
             'F1-score': f1_score(y_test, y_pred)
         }, orient='index').T
         result_df.to_csv(dossier + '/' + 'performances.csv', index_label='index')
-        print("\tPrecision: %1.3f" % precision_score(y_test, y_pred))
-        print("\tRecall: %1.3f" % recall_score(y_test, y_pred))
-        print("\tF1: %1.3f\n" % f1_score(y_test, y_pred))
+        self.feature_importances(X_test, y_test, dossier, name, fmt)
+        self.permutation_importances(X_test, y_test, 'Test set', dossier, name, fmt)
+        self.calibration_curve(X_test, y_test, dossier, name, fmt)
+        self.learning_curve(X_test, y_test, dossier, name, fmt)
+        self.ks_stat(X_test, y_test, dossier, name, fmt)
+
+    def feature_importances(self, X, y, dossier, name, fmt):
+        feature_names = [f'{i}' for i in list(X.columns)]
+        start_time = time.time()
+        importances = self.clf.feature_importances_
+        debugg(importances.shape, 'Import')
+        debugg(X.columns.shape, 'X Columns')
+        np.array(importances)
+        imp_df = pd.DataFrame(data=importances).T
+        debugg(imp_df.columns, 'columsn')
+        imp_df = imp_df.rename(columns={it: x for it, x in enumerate(X.columns)})
+        imp_df.to_csv(dossier + '/' + 'featimp_' + name + '.csv' )
+        std = np.std([
+            tree.feature_importances_ for tree in self.clf.estimators_], axis=0)
+
+        forest_importances = pd.Series(importances, index=feature_names)
+
+        fig, ax = plt.subplots()
+        forest_importances = forest_importances.sort_values(ascending=False)
+        forest_importances.plot.bar(yerr=std, ax=ax)
+        debugg(forest_importances, 'A')
+        ax.set_title("Feature importances using MDI")
+        ax.set_ylabel("Mean decrease in impurity")
+        fig.tight_layout()
+        plt.savefig(dossier + '/' + 'featimport_' + name + '.' + fmt)
+        plt.close()
+
+    def permutation_importances(self, X, y, datasetname, dossier, name, fmt):
+        result = permutation_importance(self.clf, X, y, n_repeats=10,
+                                        random_state=42, n_jobs=-1)
+        sorted_idx = result.importances_mean.argsort()
+
+        fig, ax = plt.subplots()
+        ax.boxplot(result.importances[sorted_idx].T,
+                   vert=False, labels=X.columns[sorted_idx])
+        ax.set_title(f"Permutation Importances ({datasetname})")
+        fig.tight_layout()
+        plt.savefig(dossier + '/' + 'permutimport_' + name + datasetname[:5] + '.' + fmt)
+
+    def calibration_curve(self, X_test, y_test, dossier, name, fmt):
+        probas_list = [self.clf.predict_proba(X_test)]
+        clf_names = ['Random Forest']
+
+        skplt.metrics.plot_calibration_curve(y_test.values.ravel(),
+                                             probas_list=probas_list,
+                                             clf_names=clf_names,
+                                             n_bins=10)
+
+        plt.savefig(dossier + '/' + 'calibcurve_' + name + '.' + fmt)
+        plt.close()
+
+    def learning_curve(self, X, y, dossier, name, fmt):
+        skplt.estimators.plot_learning_curve(self.clf, X=X, y=y.values.ravel(), n_jobs=-1)
+        plt.savefig(dossier + '/' + 'learncurve_' + name + '.' + fmt)
+        plt.close()
+
+    def ks_stat(self, X_test, y_test, dossier, name, fmt):
+        probas_list = self.clf.predict_proba(X_test)
+        skplt.metrics.plot_ks_statistic(y_true=y_test.values.ravel(), y_probas=probas_list)
+        plt.savefig(dossier + '/' + 'ksstat_' + name + '.' + fmt)
+        plt.close()
 
     def __str__(self):
         return self.name
