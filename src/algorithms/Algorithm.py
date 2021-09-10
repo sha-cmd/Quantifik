@@ -14,7 +14,7 @@ class Algorithm:
     def __init__(self, name):
         self.name = name
 
-    def ml_algo_RandomForest(self, nom):
+    def ml_algo_RandomForest(self, X, y, nom):
         params_csv = default_df()
 
         os.chdir('..')
@@ -39,13 +39,13 @@ class Algorithm:
                 nom = 'RandomForest'
                 num = str(int(it_i))
 
-                dossier = nom + '_' + num + 'KBest_' + str(row_kbest['k'])
+                dossier = nom + '_' + num + '_' + 'KBest_' + str(row_kbest['k'])
                 if dossier not in os.listdir():
                     os.mkdir(dossier)
                 c.metrics(b.X_test, b.y_test, dossier, nom, 'jpg')
                 c.permutation_importances(b.X_train, b.y_train, 'Train set', dossier, nom, 'jpg')
 
-    def ml_algo_LogisticRegression(self, nom):
+    def ml_algo_LogisticRegression(self, X, y, nom):
         params_csv = default_df()
 
         os.chdir('..')
