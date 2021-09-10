@@ -141,7 +141,7 @@ class RandomForestClassifierAlgorithm():
         plot_confusion_matrix(self.clf, X_test, y_test)
         plt.savefig(dossier + '/' + 'conf_matrix_' + name + '.' + fmt)
         plt.close()
-        predictions = self.clf.predict(X_test)
+        predictions = self.clf.predict_proba(X_test)[:, 1]
         precision, recall, _ = precision_recall_curve(y_test, predictions)
         display = PrecisionRecallDisplay(precision=precision, recall=recall)
         display.plot()
@@ -152,16 +152,16 @@ class RandomForestClassifierAlgorithm():
             'F1-score': f1_score(y_test, y_pred, average='weighted', zero_division=1)
         }, orient='index').T
         result_df.to_csv(dossier + '/' + 'performances.csv', index_label='index')
+        print('feature importance')
         self.feature_importances(X_test, y_test, dossier, name, fmt)
-        plt.close()
+        print('permutation importance test')
         self.permutation_importances(X_test, y_test, 'Test set', dossier, name, fmt)
-        plt.close()
+        print('calibration curve')
         self.calibration_curve(X_test, y_test, dossier, name, fmt)
-        plt.close()
+        print('learning curve')
         self.learning_curve(X_test, y_test, dossier, name, fmt)
-        plt.close()
+        print('ks statistics')
         self.ks_stat(X_test, y_test, dossier, name, fmt)
-        plt.close()
 
     def feature_importances(self, X, y, dossier, name, fmt):
         feature_names = [f'{i}' for i in list(X.columns)]
@@ -200,6 +200,7 @@ class RandomForestClassifierAlgorithm():
         ax.set_title(f"Permutation Importances ({datasetname})")
         fig.tight_layout()
         plt.savefig(dossier + '/' + 'permutimport_' + name + datasetname[:5] + '.' + fmt)
+        plt.close()
 
     def calibration_curve(self, X_test, y_test, dossier, name, fmt):
         probas_list = [self.clf.predict_proba(X_test)]

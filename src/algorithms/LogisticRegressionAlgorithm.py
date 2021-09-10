@@ -114,7 +114,7 @@ class LogisticRegressionAlgorithm():
         plot_confusion_matrix(self.clf, X_test, y_test)
         plt.savefig(dossier + '/' + 'conf_matrix_' + name + '.' + fmt)
         plt.close()
-        predictions = self.clf.predict(X_test)
+        predictions = self.clf.predict_proba(X_test)[:, 1]
         precision, recall, _ = precision_recall_curve(y_test, predictions)
         display = PrecisionRecallDisplay(precision=precision, recall=recall)
         display.plot()
@@ -125,9 +125,13 @@ class LogisticRegressionAlgorithm():
             'F1-score': f1_score(y_test, y_pred, average='weighted', zero_division=1)
         }, orient='index').T
         result_df.to_csv(dossier + '/' + 'performances.csv', index_label='index')
-        self.permutation_importances(X_test, y_test, 'Test set', dossier, name, fmt)
+        #print('permutation test')
+        #self.permutation_importances(X_test, y_test, 'Test set', dossier, name, fmt)
+        print('calibration curve')
         self.calibration_curve(X_test, y_test, dossier, name, fmt)
+        print('learning curve')
         self.learning_curve(X_test, y_test, dossier, name, fmt)
+        print('ks statistics')
         self.ks_stat(X_test, y_test, dossier, name, fmt)
 
 
