@@ -1,3 +1,4 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -5,7 +6,7 @@ import time
 import ast
 import scikitplot as skplt
 
-
+from src.utils.logger import log_init as log
 from sklearn.ensemble import RandomForestClassifier as RFC
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.metrics import plot_roc_curve
@@ -15,6 +16,8 @@ from sklearn.metrics import (precision_score, recall_score,
                              f1_score)
 from sklearn.inspection import permutation_importance
 from src.algorithms.Algorithm import Algorithm
+
+log = log()
 
 
 def default_df():
@@ -99,7 +102,7 @@ class RandomForestClassifierAlgorithm(Algorithm):
         self.ccp_alpha = params['ccp_alpha'] if not pd.isna(params['ccp_alpha']) else 0.0
         self.max_samples = params['max_samples'] if not pd.isna(params['max_samples']) else None
         self.make_classifier()
-        debugg(self.max_samples, 'max samples')
+       # debugg(self.max_samples, 'max samples')
 
 
     def fit_clf(self, X, y):
@@ -131,6 +134,7 @@ class RandomForestClassifierAlgorithm(Algorithm):
                        )
 
     def metrics(self, X_test, y_test, dossier, name, fmt):
+        log.info('metrics')
         y_pred = self.clf.predict(X_test)
         plot_roc_curve(self.clf, X_test, y_test)
         plt.savefig(dossier + '/' + 'roc_curve_' + name + '.' + fmt)
@@ -159,11 +163,11 @@ class RandomForestClassifierAlgorithm(Algorithm):
         feature_names = [f'{i}' for i in list(X.columns)]
         start_time = time.time()
         importances = self.clf.feature_importances_
-        debugg(importances.shape, 'Import')
-        debugg(X.columns.shape, 'X Columns')
+        #debugg(importances.shape, 'Import')
+        #debugg(X.columns.shape, 'X Columns')
         np.array(importances)
         imp_df = pd.DataFrame(data=importances).T
-        debugg(imp_df.columns, 'columsn')
+        #debugg(imp_df.columns, 'columsn')
         imp_df = imp_df.rename(columns={it: x for it, x in enumerate(X.columns)})
         imp_df.to_csv(dossier + '/' + 'featimp_' + name + '.csv' )
         std = np.std([
@@ -174,7 +178,7 @@ class RandomForestClassifierAlgorithm(Algorithm):
         fig, ax = plt.subplots()
         forest_importances = forest_importances.sort_values(ascending=False)
         forest_importances.plot.bar(yerr=std, ax=ax)
-        debugg(forest_importances, 'A')
+        #debugg(forest_importances, 'A')
         ax.set_title("Feature importances using MDI")
         ax.set_ylabel("Mean decrease in impurity")
         fig.tight_layout()
