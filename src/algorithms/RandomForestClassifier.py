@@ -147,9 +147,9 @@ class RandomForestClassifierAlgorithm():
         display.plot()
         plt.savefig(dossier + '/' + 'precrecalldisp_' + name + '.' + fmt)
         result_df = pd.DataFrame.from_dict({
-            'Precision': precision_score(y_test, y_pred),
-            'Recall': recall_score(y_test, y_pred),
-            'F1-score': f1_score(y_test, y_pred)
+            'Precision': precision_score(y_test, y_pred, average='weighted', zero_division=1),
+            'Recall': recall_score(y_test, y_pred, average='weighted', zero_division=1),
+            'F1-score': f1_score(y_test, y_pred, average='weighted', zero_division=1)
         }, orient='index').T
         result_df.to_csv(dossier + '/' + 'performances.csv', index_label='index')
         self.feature_importances(X_test, y_test, dossier, name, fmt)
@@ -173,7 +173,7 @@ class RandomForestClassifierAlgorithm():
         imp_df = pd.DataFrame(data=importances).T
         #debugg(imp_df.columns, 'columsn')
         imp_df = imp_df.rename(columns={it: x for it, x in enumerate(X.columns)})
-        imp_df.to_csv(dossier + '/' + 'featimp_' + name + '.csv' )
+        imp_df.to_csv(dossier + '/' + 'featimp_' + name + '.csv', index_label='index')
         std = np.std([
             tree.feature_importances_ for tree in self.clf.estimators_], axis=0)
 

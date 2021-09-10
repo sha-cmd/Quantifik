@@ -121,7 +121,7 @@ class LogisticRegressionAlgorithm():
         plt.savefig(dossier + '/' + 'precrecalldisp_' + name + '.' + fmt)
         result_df = pd.DataFrame.from_dict({
             'Precision': precision_score(y_test, y_pred, average='weighted', zero_division=1),
-            'Recall': recall_score(y_test, y_pred),
+            'Recall': recall_score(y_test, y_pred, average='weighted', zero_division=1),
             'F1-score': f1_score(y_test, y_pred, average='weighted', zero_division=1)
         }, orient='index').T
         result_df.to_csv(dossier + '/' + 'performances.csv', index_label='index')
