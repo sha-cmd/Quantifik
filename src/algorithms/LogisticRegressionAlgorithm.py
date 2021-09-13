@@ -151,7 +151,7 @@ class LogisticRegressionAlgorithm:
 
     def calibration_curve(self, X_test, y_test, dossier, name, fmt):
         probas_list = [self.clf.predict_proba(X_test)]
-        clf_names = ['Random Forest']
+        clf_names = ['Logistic Regression']
 
         skplt.metrics.plot_calibration_curve(y_test.values.ravel(),
                                              probas_list=probas_list,

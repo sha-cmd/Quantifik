@@ -5,6 +5,8 @@ import pandas as pd
 import time
 import ast
 import scikitplot as skplt
+import os
+import shape
 
 from src.utils.logger import log_init as log
 from sklearn.ensemble import RandomForestClassifier as RFC
@@ -224,6 +226,42 @@ class RandomForestClassifierAlgorithm():
         skplt.metrics.plot_ks_statistic(y_true=y_test.values.ravel(), y_probas=probas_list)
         plt.savefig(dossier + '/' + 'ksstat_' + name + '.' + fmt)
         plt.close()
+
+    def dependence(self, shap_values, X, dossier, name, fmt):
+        fig = plt.figure(figsize=(14, 7))
+        plots_cnt = np.min([9, X.shape[1]])
+        cols_cnt = 3
+        rows_cnt = 3
+        if plots_cnt < 4:
+            rows_cnt = 1
+        elif plots_cnt < 7:
+            rows_cnt = 2
+        for i in range(plots_cnt):
+            ax = fig.add_subplot(rows_cnt, cols_cnt, i + 1)
+            shap.dependence_plot(
+                f"rank({i})",
+                shap_values,
+                X,
+                show=False,
+                title=f"Importance #{i + 1}",
+                ax=ax,
+            )
+
+        fig.tight_layout(pad=2.0)
+        fig.savefig(dossier + '/' + 'shap_dependence_' + name + '.' + fmt
+                    )
+        plt.close("all")
+
+    def summary(self, shap_values, X, dossier, name, fmt):
+        fig = plt.gcf()
+
+        shap.summary_plot(
+            shap_values, X, plot_type="bar", show=False  # , class_names=classes
+        )
+        fig.tight_layout(pad=2.0)
+        plt.savefig(dossier + '/' + 'shap_summary_' + name + '.' + fmt
+                    )
+        plt.close("all")
 
     def __str__(self):
         return self.name
