@@ -61,7 +61,7 @@ def debugg(x, letter):
     print(letter, x)
 
 
-class LogisticRegressionAlgorithm():
+class LogisticRegressionAlgorithm:
 
     def __init__(self, X, y, params: pd.DataFrame = default_logistic_regression_params()):
         self.penalty = params['penalty']
