@@ -55,7 +55,6 @@ def default_logistic_regression_params():
                       'monotonic_cst': None,
                       'warm_start': False,
                       'early_stopping': 'auto',
-                      'warm_start': 'loss',
                       'scoring': 'loss',
                       'validation_fraction': 0.1,
                       'n_iter_no_change': 10,
@@ -74,24 +73,35 @@ def debugg(x, letter):
 class LogisticRegressionAlgorithm:
 
     def __init__(self, X, y, params: pd.DataFrame = default_logistic_regression_params()):
-        self.loss = params['loss']
-        self.learning_rate = params['learning_rate']
-        self.max_iter = params['max_iter']
-        self.max_leaf_nodes = params['max_leaf_nodes']
-        self.max_depth = params['max_depth']
-        self.min_samples_leaf = params['min_samples_leaf']
-        self.l2_regularization = params['l2_regularization']
-        self.max_bins = params['max_bins']
-        self.categorical_features = params['categorical_features']
-        self.monotonic_cst = params['monotonic_cst']
-        self.warm_start = params['warm_start']
-        self.early_stopping = params['early_stopping']
-        self.scoring = params['scoring']
-        self.validation_fraction = params['validation_fraction']
-        self.n_iter_no_change = params['n_iter_no_change']
-        self.tol = params['tol']
-        self.verbose = params['verbose']
-        self.random_state = params['random_state']
+        df_init = default_hist_gradient_boosting_classifier()
+        self.loss = params['loss'] if not pd.isna(params['loss']) else df_init['loss']
+        self.learning_rate = params['learning_rate'] if not pd.isna(params['learning_rate']) else df_init[
+            'learning_rate']
+        self.max_iter = params['max_iter'] if not pd.isna(params['max_iter']) else df_init['max_iter']
+        self.max_leaf_nodes = params['max_leaf_nodes'] if not pd.isna(params['max_leaf_nodes']) else df_init[
+            'max_leaf_nodes']
+        self.max_depth = params['max_depth'] if not pd.isna(params['max_depth']) else df_init['max_depth']
+        self.min_samples_leaf = params['min_samples_leaf'] if not pd.isna(params['min_samples_leaf']) else df_init[
+            'min_samples_leaf']
+        self.l2_regularization = params['l2_regularization'] if not pd.isna(params['l2_regularization']) else df_init[
+            'l2_regularization']
+        self.max_bins = params['max_bins'] if not pd.isna(params['max_bins']) else df_init['max_bins']
+        self.categorical_features = params['categorical_features'] if not pd.isna(params['categorical_features']) else \
+            df_init['categorical_features']
+        self.monotonic_cst = params['monotonic_cst'] if not pd.isna(params['monotonic_cst']) else df_init[
+            'monotonic_cst']
+        self.warm_start = params['warm_start'] if not pd.isna(params['warm_start']) else df_init['warm_start']
+        self.early_stopping = params['early_stopping'] if not pd.isna(params['early_stopping']) else df_init[
+            'early_stopping']
+        self.scoring = params['scoring'] if not pd.isna(params['scoring']) else df_init['scoring']
+        self.validation_fraction = params['validation_fraction'] if not pd.isna(params['validation_fraction']) else \
+            df_init['validation_fraction']
+        self.n_iter_no_change = params['n_iter_no_change'] if not pd.isna(params['n_iter_no_change']) else df_init[
+            'n_iter_no_change']
+        self.tol = params['tol'] if not pd.isna(params['tol']) else df_init['tol']
+        self.verbose = params['verbose'] if not pd.isna(params['verbose']) else df_init['verbose']
+        self.random_state = params['random_state'] if not pd.isna(params['random_state']) else df_init['random_state']
+
         self.make_classifier()
 
     def fit_clf(self, X, y):
