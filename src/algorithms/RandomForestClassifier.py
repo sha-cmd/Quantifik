@@ -6,7 +6,7 @@ import time
 import ast
 import scikitplot as skplt
 import os
-import shape
+import shap
 
 from src.utils.logger import log_init as log
 from sklearn.ensemble import RandomForestClassifier as RFC
@@ -21,7 +21,7 @@ from sklearn.inspection import permutation_importance
 log = log()
 
 
-def default_df():
+def default_randomforest_df():
     return pd.DataFrame({'n_estimators': pd.Series([], dtype=int),
                          'criterion': pd.Series([], dtype=str),
                          'max_depth': pd.Series([], dtype=int),
@@ -44,7 +44,7 @@ def default_df():
 
 
 def default_params():
-    df = default_df()
+    df = default_randomforest_df()
     return df.append({'n_estimators': 100,
                       'criterion': 'gini',
                       'max_depth': None,
